@@ -1,0 +1,42 @@
+{
+  "name": "tshirtshop-server",
+  "version": "1.0.0",
+  "description": "Backend server for tshirtshop client",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --entry ./app/public/js/index.js --output-filename bundle.min.js --output-path ./app/public/js ",
+    "start": "npm run nodemon --exec babel-node server.js",
+    "sequelize-skeleton": "./node_modules/sequelize-cli/lib/sequelize init:models; ./node_modules/sequelize-cli/lib/sequelize init:config",
+    "init-db": "cd DIR_WHERE_MYSQL_BIN_IS && echo 'DROP DATABASE IF EXISTS api_node_demo; CREATE DATABASE api_node_demo CHARACTER SET utf8 COLLATE utf8_general_ci' | ./mysql -u root && cd -",
+    "dev": "nodemon --exec babel-node server.js"
+  },
+  "keywords": [],
+  "author": "FullyStackedCoder",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-boost": "^0.3.1",
+    "apollo-server-express": "^2.5.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.4",
+    "dotenv": "^8.0.0",
+    "express": "^4.16.4",
+    "graphql": "^14.3.0",
+    "graphql-tag": "^2.10.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^1.6.5",
+    "node-uuid": "^1.4.8",
+    "sequelize": "^5.8.5",
+    "stripe": "^7.0.0",
+    "uniqid": "^5.0.3",
+    "validator": "^10.11.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-3": "^6.24.1",
+    "nodemon": "^1.19.0",
+    "sequelize-cli": "^5.4.0",
+    "webpack": "^4.30.0"
+  }
+}

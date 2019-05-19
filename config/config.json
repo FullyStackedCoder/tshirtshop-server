@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "testuser",
+    "password": "Btb212121!!",
+    "database": "tshirtshop",
+    "host": "ec2-13-52-179-155.us-west-1.compute.amazonaws.com",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "testuser",
+    "password": "Btb212121!!",
+    "database": "tshirtshop",
+    "host": "ec2-13-52-179-155.us-west-1.compute.amazonaws.com",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "testuser",
+    "password": "Btb212121!!",
+    "database": "tshirtshop",
+    "host": "ec2-13-52-179-155.us-west-1.compute.amazonaws.com",
+    "dialect": "mysql"
+  }
+}
