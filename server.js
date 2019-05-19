@@ -28,6 +28,7 @@ const server = new ApolloServer({
 });
 
 const app = express();
+app.set('port', (process.env.PORT || 4000));
 
 const corsOptions = {
   credentials: true,
@@ -70,7 +71,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 server.applyMiddleware({ app, cors: corsOptions });
 
 db.sequelize.sync().then(() => {
-  app.listen({ port: 4000 }, () =>
-    console.log(`� Server ready at http://localhost:4000${server.graphqlPath}`)
+  app.listen(app.get('port'), () =>
+    console.log(`� Server ready at http://localhost:${app.get('port')}${server.graphqlPath}`)
   );
 });
