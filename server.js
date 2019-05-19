@@ -24,7 +24,10 @@ const server = new ApolloServer({
   context: async ({ req }) => ({
     ...req,
     db
-  })
+  }),
+  // validationRules: [depthLimit(strapi.plugins.graphql.config.depthLimit)],
+  // playground: false,
+  introspection: true // add this param
 });
 
 const app = express();
