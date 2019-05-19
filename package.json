@@ -16,6 +16,7 @@
   "dependencies": {
     "apollo-boost": "^0.3.1",
     "apollo-server-express": "^2.5.0",
+    "babel-cli": "^6.26.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.4",
@@ -33,7 +34,6 @@
     "validator": "^10.11.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-stage-3": "^6.24.1",
     "sequelize-cli": "^5.4.0",
