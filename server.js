@@ -26,7 +26,7 @@ const server = new ApolloServer({
     db
   }),
   // validationRules: [depthLimit(strapi.plugins.graphql.config.depthLimit)],
-  // playground: false,
+  playground: true,
   introspection: true // add this param
 });
 
