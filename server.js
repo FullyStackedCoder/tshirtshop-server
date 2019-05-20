@@ -76,12 +76,12 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 // 	credentials: true,
 // }));
 
-// server.applyMiddleware({ app, cors: corsOptions });
-server.applyMiddleware({
-	app,
-	path: '/',
-	cors: false,
-});
+server.applyMiddleware({ app, cors: corsOptions });
+// server.applyMiddleware({
+// 	app,
+// 	path: '/',
+// 	cors: false,
+// });
 
 db.sequelize.sync().then(() => {
   app.listen(app.get('port'), () =>
