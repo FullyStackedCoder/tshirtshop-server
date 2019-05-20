@@ -59,19 +59,29 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "OPTIONS, GET, PUT, POST, DELETE, PATCH"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "OPTIONS, GET, PUT, POST, DELETE, PATCH"
+//   );
+//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   next();
+// });
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-server.applyMiddleware({ app, cors: corsOptions });
+app.use(cors({
+	origin: process.env.FRONTEND_URL,
+	credentials: true,
+}));
+
+// server.applyMiddleware({ app, cors: corsOptions });
+server.applyMiddleware({
+	app,
+	path: '/',
+	cors: false,
+});
 
 db.sequelize.sync().then(() => {
   app.listen(app.get('port'), () =>
