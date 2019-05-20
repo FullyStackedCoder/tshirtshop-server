@@ -531,6 +531,25 @@ export default {
         info
       );
 
+      const orderItems = cartItems.map(cartItem => {
+        const orderItem = {
+          order_id: order.order_id,
+          product_id: cartItem.product.product_id,
+          attributes: cartItem.attributes,
+          product_name: cartItem.product.name,
+          quantity: cartItem.quantity,
+          unit_cost: pickPrice(
+            cartItem.product.price,
+            cartItem.product.discounted_price
+          )
+        };
+        return orderItem;
+      });
+
+      const createOrderDetails = await ctx.db.order_detail.bulkCreate(
+        orderItems
+      );
+
       const charge = await stripe.charges.create({
         amount: amount * 100,
         currency: "USD",
@@ -554,26 +573,7 @@ export default {
           },
           info
         );
-      }
-
-      const orderItems = cartItems.map(cartItem => {
-        const orderItem = {
-          order_id: order.order_id,
-          product_id: cartItem.product.product_id,
-          attributes: cartItem.attributes,
-          product_name: cartItem.product.name,
-          quantity: cartItem.quantity,
-          unit_cost: pickPrice(
-            cartItem.product.price,
-            cartItem.product.discounted_price
-          )
-        };
-        return orderItem;
-      });
-
-      const createOrderDetails = await ctx.db.order_detail.bulkCreate(
-        orderItems
-      );
+      };
 
       const deleteCart = await ctx.db.shopping_cart.destroy(
         {
