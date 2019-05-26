@@ -32,9 +32,14 @@ export default `
     value: String!
   }
 
+  type AttValue {
+    value: String!
+  }
+
   type Attribute {
     attribute_id: ID!
     name: String!
+    attributeValue: [AttributeValue]!
   }
 
   type AggregateItem {
@@ -108,14 +113,21 @@ export default `
     product: Product!
   }
 
+  type MinMaxPrice {
+    min: Float!
+    max: Float!
+  }
+
   type Query {
-    products(limit: Int, offset: Int, categories: [Int], departments: [Int]): [Product!]!
+    products(limit: Int, offset: Int, categories: [Int], departments: [Int], searchTerm: String, attributeValues: [String], minPrice: Float, maxPrice: Float): [Product!]!
+    findMinMaxPrice: MinMaxPrice
     searchProducts(searchTerm: String!, limit: Int): [Product!]!
     product(id: ID!): Product
-    productsCount(categories: [Int], departments: [Int]): AggregateItem!
+    productsCount(categories: [Int], departments: [Int], searchTerm: String, attributeValues: [String], minPrice: Float, maxPrice: Float): AggregateItem!
     departments: [Department!]!
     categories: [Category!]!
     attributes: [Attribute!]!
+    allAttributeValues: [AttValue!]!
     productattributes(id: ID!): [ProductAttribute!]!
     me: Customer
     cartItems(cartId: String): [CartItem!]!
@@ -130,9 +142,9 @@ export default `
     signin(email: String!, password: String!): Customer!
     signout: SuccessMessage
     addToCart(cartId: String, attributes: String!, quantity: Int!, productId: ID!): CartItem!
-    removeFromCart(cartId: String, productId: ID!): CartItem!
-    incrementCartItem(cartId: String, productId: ID!): CartItem!
-    decrementCartItem(cartId: String, productId: ID!): CartItem!
+    removeFromCart(cartId: String, productId: ID!, attributes: String!): CartItem!
+    incrementCartItem(cartId: String, productId: ID!, attributes: String!): CartItem!
+    decrementCartItem(cartId: String, productId: ID!, attributes: String!): CartItem!
     updateCustomer(customer_id: ID!, email: String!, firstName: String!, lastName: String!, address: String!, city: String!, region: String!, country: String!, zipCode: String!, shippingRegion: Int!, shippingType: Int!): Customer!
     createOrder(authCode: String!, cartId: String, shippingId: Int!): Orders
   }

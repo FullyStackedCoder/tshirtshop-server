@@ -14,5 +14,12 @@ export default (sequelize, DataTypes) => {
     freezeTableName: true,
     timestamps: false
   });
+
+  Attribute.associate = (models) => {
+    Attribute.hasMany(models.attribute_value, {
+      foreignKey: "attribute_id"
+    });
+  }
+
   return Attribute;
 };

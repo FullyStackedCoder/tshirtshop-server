@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const uuidV1 = require("uuid/v1");
-const uniqid = require('uniqid');
+const uniqid = require("uniqid");
 const stripe = require("../stripe");
 
 const pickPrice = (price, discountedPrice) => {
@@ -27,6 +27,9 @@ export default {
   },
   Category: {
     department: (parent, args, ctx, info) => parent.getDepartment()
+  },
+  Attribute: {
+    attributeValue: (parent, args, ctx, info) => parent.getAttribute_values()
   },
   AttributeValue: {
     attribute: (parent, args, ctx, info) => parent.getAttribute()
@@ -54,6 +57,59 @@ export default {
           .findAll({}, info)
           .map(department => department.department_id);
       }
+      let attributeValues = args.attributeValues;
+      if (
+        !attributeValues ||
+        attributeValues.length < 1 ||
+        attributeValues[0] === null
+      ) {
+        attributeValues = await ctx.db.attribute_value
+          .findAll({}, info)
+          .map(attributeValue => attributeValue.value);
+      }
+      let whereObject = null;
+      if ((args.minPrice && args.minPrice > 0) || (args.maxPrice && args.maxPrice > 0)) {
+        whereObject = {
+          [Op.or]: [
+            {
+              discounted_price: {
+                [Op.and]: [
+                  {
+                    [Op.gte]: args.minPrice
+                  },
+                  {
+                    [Op.lte]: args.maxPrice
+                  },
+                  {
+                    [Op.ne]: 0
+                  }
+                ]
+              }
+            },
+            {
+              [Op.and]: [
+                {
+                  discounted_price: {
+                    [Op.eq]: 0
+                  }
+                },
+                {
+                  price: {
+                    [Op.and]: [
+                      {
+                        [Op.gte]: args.minPrice
+                      },
+                      {
+                        [Op.lte]: args.maxPrice
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
       const products = await ctx.db.product.findAll(
         {
           offset: args.offset,
@@ -68,12 +124,146 @@ export default {
                   { department_id: departments }
                 ]
               }
-            }
-          ]
+            },
+            { model: ctx.db.attribute_value, where: { value: attributeValues } }
+          ],
+          where: {
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  {
+                    name: {
+                      [Op.like]: "%" + args.searchTerm + "%"
+                    }
+                  },
+                  { description: { [Op.like]: "%" + args.searchTerm + "%" } }
+                ]
+              },
+              whereObject
+            ]
+          }
         },
         info
       );
       return products;
+    },
+    async productsCount(parent, args, ctx, info) {
+      let categories = args.categories;
+      if (!categories || categories.length < 1 || categories[0] === null) {
+        categories = await ctx.db.category
+          .findAll({}, info)
+          .map(category => category.category_id);
+      }
+      let departments = args.departments;
+      if (!departments || departments.length < 1 || departments[0] === null) {
+        departments = await ctx.db.department
+          .findAll({}, info)
+          .map(department => department.department_id);
+      }
+      let attributeValues = args.attributeValues;
+      if (
+        !attributeValues ||
+        attributeValues.length < 1 ||
+        attributeValues[0] === null
+      ) {
+        attributeValues = await ctx.db.attribute_value
+          .findAll({}, info)
+          .map(attributeValue => attributeValue.value);
+      }
+      let whereObject = null;
+      if ((args.minPrice && args.minPrice > 0) || (args.maxPrice && args.maxPrice > 0)) {
+        whereObject = {
+          [Op.or]: [
+            {
+              discounted_price: {
+                [Op.and]: [
+                  {
+                    [Op.gte]: args.minPrice
+                  },
+                  {
+                    [Op.lte]: args.maxPrice
+                  },
+                  {
+                    [Op.ne]: 0
+                  }
+                ]
+              }
+            },
+            {
+              [Op.and]: [
+                {
+                  discounted_price: {
+                    [Op.eq]: 0
+                  }
+                },
+                {
+                  price: {
+                    [Op.and]: [
+                      {
+                        [Op.gte]: args.minPrice
+                      },
+                      {
+                        [Op.lte]: args.maxPrice
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+      const total = await ctx.db.product.findAndCountAll(
+        {
+          include: [
+            {
+              model: ctx.db.category,
+              where: {
+                [Op.and]: [
+                  { category_id: categories },
+                  { department_id: departments }
+                ]
+              }
+            },
+            { model: ctx.db.attribute_value, where: { value: attributeValues } }
+          ],
+          distinct: true,
+          where: {
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  {
+                    name: {
+                      [Op.like]: "%" + args.searchTerm + "%"
+                    }
+                  },
+                  { description: { [Op.like]: "%" + args.searchTerm + "%" } }
+                ]
+              },
+              whereObject
+            ]
+          }
+        },
+        info
+      );
+      return total;
+    },
+    async findMinMaxPrice(parent, args, ctx, info) {
+      const min = await ctx.db.product.min(
+        "discounted_price",
+        { where: { discounted_price: { [Op.gt]: 0 } } },
+        info
+      );
+      const max = await ctx.db.product.max(
+        "price",
+        { where: { price: { [Op.gt]: 0 } } },
+        info
+      );
+      const MinMax = {
+        min: Math.floor(min),
+        max: Math.ceil(max)
+      };
+      return MinMax;
     },
     async searchProducts(parent, args, ctx, info) {
       const searchResults = await ctx.db.product.findAll(
@@ -108,38 +298,6 @@ export default {
       );
       return product;
     },
-    async productsCount(parent, args, ctx, info) {
-      let categories = args.categories;
-      if (!categories || categories.length < 1 || categories[0] === null) {
-        categories = await ctx.db.category
-          .findAll({}, info)
-          .map(category => category.category_id);
-      }
-      let departments = args.departments;
-      if (!departments || departments.length < 1 || departments[0] === null) {
-        departments = await ctx.db.department
-          .findAll({}, info)
-          .map(department => department.department_id);
-      }
-      const total = await ctx.db.product.findAndCountAll(
-        {
-          include: [
-            {
-              model: ctx.db.category,
-              where: {
-                [Op.and]: [
-                  { category_id: categories },
-                  { department_id: departments }
-                ]
-              }
-            }
-          ],
-          distinct: true
-        },
-        info
-      );
-      return total;
-    },
     async departments(parent, args, ctx, info) {
       const departments = await ctx.db.department.findAll({}, info);
       return departments;
@@ -151,6 +309,10 @@ export default {
     async attributes(parent, args, ctx, info) {
       const attributes = await ctx.db.attribute.findAll({}, info);
       return attributes;
+    },
+    async allAttributeValues(parent, args, ctx, info) {
+      const attributeValues = await ctx.db.attribute_value.findAll({}, info);
+      return attributeValues;
     },
     async productattributes(parent, args, ctx, info) {
       const attributeValues = await ctx.db.product_attribute.findAll(
@@ -301,7 +463,7 @@ export default {
       };
       if (args.cartId) {
         whereObject = {
-          [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }]
+          [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }, { attributes: args.attributes }]
         };
       }
       const existingCart = await ctx.db.shopping_cart.findOne({
@@ -354,7 +516,7 @@ export default {
     },
     async removeFromCart(parent, args, ctx, info) {
       let whereObject = {
-        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }]
+        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }, { attributes: args.attributes }]
       };
       const existingCart = await ctx.db.shopping_cart.findOne({
         where: whereObject
@@ -370,7 +532,7 @@ export default {
     },
     async incrementCartItem(parent, args, ctx, info) {
       let whereObject = {
-        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }]
+        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }, { attributes: args.attributes }]
       };
       const existingCart = await ctx.db.shopping_cart.findOne({
         where: whereObject
@@ -387,7 +549,7 @@ export default {
     },
     async decrementCartItem(parent, args, ctx, info) {
       let whereObject = {
-        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }]
+        [Op.and]: [{ cart_id: args.cartId }, { product_id: args.productId }, { attributes: args.attributes }]
       };
       const existingCart = await ctx.db.shopping_cart.findOne({
         where: whereObject
@@ -456,10 +618,16 @@ export default {
         });
       }
       if (args.shippingRegion === 1) {
-        errors.push({ message: "Please choose a shipping region", field: "shipping" });
+        errors.push({
+          message: "Please choose a shipping region",
+          field: "shipping"
+        });
       }
       if (args.shippingType === 0) {
-        errors.push({ message: "Please choose a shipping type", field: "shipping" });
+        errors.push({
+          message: "Please choose a shipping type",
+          field: "shipping"
+        });
       }
       if (errors.length > 0) {
         const error = new Error("Invalid input.");
@@ -531,25 +699,6 @@ export default {
         info
       );
 
-      const orderItems = cartItems.map(cartItem => {
-        const orderItem = {
-          order_id: order.order_id,
-          product_id: cartItem.product.product_id,
-          attributes: cartItem.attributes,
-          product_name: cartItem.product.name,
-          quantity: cartItem.quantity,
-          unit_cost: pickPrice(
-            cartItem.product.price,
-            cartItem.product.discounted_price
-          )
-        };
-        return orderItem;
-      });
-
-      const createOrderDetails = await ctx.db.order_detail.bulkCreate(
-        orderItems
-      );
-
       const charge = await stripe.charges.create({
         amount: amount * 100,
         currency: "USD",
@@ -573,7 +722,26 @@ export default {
           },
           info
         );
-      };
+      }
+
+      const orderItems = cartItems.map(cartItem => {
+        const orderItem = {
+          order_id: order.order_id,
+          product_id: cartItem.product.product_id,
+          attributes: cartItem.attributes,
+          product_name: cartItem.product.name,
+          quantity: cartItem.quantity,
+          unit_cost: pickPrice(
+            cartItem.product.price,
+            cartItem.product.discounted_price
+          )
+        };
+        return orderItem;
+      });
+
+      const createOrderDetails = await ctx.db.order_detail.bulkCreate(
+        orderItems
+      );
 
       const deleteCart = await ctx.db.shopping_cart.destroy(
         {
