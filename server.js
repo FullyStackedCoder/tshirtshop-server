@@ -35,7 +35,7 @@ app.set('port', (process.env.PORT || 4000));
 
 const corsOptions = {
   credentials: true,
-  origin: process.env.FRONTEND_URL
+  origin: [process.env.FRONTEND_URL, "http://localhost"]
 };
 
 app.use(cookieParser());

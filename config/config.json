@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "testuser",
-    "password": "Btb212121!!",
+    "username": "root",
+    "password": "123456789",
     "database": "tshirtshop",
-    "host": "ec2-13-52-179-155.us-west-1.compute.amazonaws.com",
+    "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "test": {
