@@ -1,6 +1,8 @@
 # tshirtshop-server
 Backend for T-Shirt Shop Application
 
+https://tshirtshop-apollo-prod.herokuapp.com/graphql
+
 ### Tech Stack used:
 1. Apollo Server Express -> for implementing Query and Mutation Resolvers, for custom server side logic, graphql endpoint and authentication
 2. Sequelize -> ORM to communicate with Mysql server
